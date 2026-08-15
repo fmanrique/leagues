@@ -142,6 +142,18 @@ export async function requireUser(roles?: SessionUser["rol"][]): Promise<Session
  * seleccionada (cookie `calccio_liga`); el resto sobre la suya.
  */
 export async function requireLigaId(user: SessionUser): Promise<string> {
+  const ligaId = await ligaIdOpcional(user);
+  // Superadmin sin ligas todavía (base recién creada): a crear la primera
+  if (!ligaId) redirect("/admin/ligas");
+  return ligaId;
+}
+
+/**
+ * Como requireLigaId, pero devuelve null en vez de redirigir cuando el
+ * superadmin aún no tiene ninguna liga. Lo usa el layout del panel para no
+ * caer en un loop de redirecciones sobre /admin/ligas con la base vacía.
+ */
+export async function ligaIdOpcional(user: SessionUser): Promise<string | null> {
   if (user.rol !== "superadmin") {
     if (!user.ligaId) redirect("/admin/login");
     return user.ligaId;
@@ -156,8 +168,7 @@ export async function requireLigaId(user: SessionUser): Promise<string> {
     where: (l, { eq }) => eq(l.activo, true),
     orderBy: (l, { asc }) => asc(l.createdAt),
   });
-  if (!first) redirect("/admin/ligas");
-  return first.id;
+  return first?.id ?? null;
 }
 
 function toSessionUser(u: typeof t.usuarios.$inferSelect): SessionUser {

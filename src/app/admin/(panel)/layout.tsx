@@ -1,13 +1,17 @@
-import { requireUser, requireLigaId } from "@/lib/auth";
+import { requireUser, ligaIdOpcional } from "@/lib/auth";
 import { db } from "@/db";
 import { contarNoLeidas, listarNotificaciones } from "@/lib/notificaciones";
 import AdminShell from "@/components/admin/AdminShell";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
-  const ligaId = await requireLigaId(user);
+  // Null solo para superadmin en una base sin ligas: el shell se renderiza
+  // igual (sin liga activa) para que pueda crear la primera en /admin/ligas
+  const ligaId = await ligaIdOpcional(user);
   const [liga, ligas, noLeidas] = await Promise.all([
-    db.query.ligas.findFirst({ where: (l, { eq }) => eq(l.id, ligaId) }),
+    ligaId
+      ? db.query.ligas.findFirst({ where: (l, { eq }) => eq(l.id, ligaId) })
+      : Promise.resolve(undefined),
     user.rol === "superadmin"
       ? db.query.ligas.findMany({
           where: (l, { eq }) => eq(l.activo, true),
@@ -15,9 +19,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           columns: { id: true, nombre: true },
         })
       : Promise.resolve([]),
-    contarNoLeidas(user, ligaId),
+    ligaId ? contarNoLeidas(user, ligaId) : Promise.resolve(0),
   ]);
-  const avisos = await listarNotificaciones(user, ligaId, 8);
+  const avisos = ligaId ? await listarNotificaciones(user, ligaId, 8) : [];
 
   return (
     <AdminShell
