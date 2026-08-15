@@ -1,0 +1,1 @@
+ALTER TABLE "torneos" DROP COLUMN "horarios_por_dia";

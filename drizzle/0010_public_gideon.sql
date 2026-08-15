@@ -1,0 +1,1 @@
+ALTER TABLE "torneos" ADD COLUMN "horarios_por_dia" jsonb;

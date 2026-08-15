@@ -1,0 +1,1 @@
+ALTER TABLE "torneos" ADD COLUMN "partidos_por_equipo" smallint;

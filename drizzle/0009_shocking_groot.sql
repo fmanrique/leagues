@@ -1,0 +1,1 @@
+ALTER TABLE "jugadores" ADD COLUMN "cambios_pendientes" jsonb;

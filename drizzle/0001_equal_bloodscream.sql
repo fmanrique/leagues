@@ -1,0 +1,1 @@
+ALTER TABLE "ligas" ADD COLUMN "fondo_og_url" text;
